@@ -1,0 +1,15 @@
+import { Module } from '@nestjs/common';
+import { PostsService } from './posts.service';
+import { PostsController } from './posts.controller';
+import { MongooseModule } from '@nestjs/mongoose';
+import { PostsRepository } from './repositories/posts.repository';
+import { PostEntity, PostSchema } from './entities/post.entity';
+import { PostsSerializer } from './services/posts.serializer';
+
+@Module({
+  imports: [MongooseModule.forFeature([{ name: PostEntity.name, schema: PostSchema }])],
+  controllers: [PostsController],
+  providers: [PostsService, PostsRepository, PostsSerializer]
+})
+export class PostsModule {}
+
