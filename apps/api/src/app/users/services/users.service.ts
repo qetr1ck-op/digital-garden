@@ -1,4 +1,4 @@
-import { UserSerializer } from './user.serializer';
+import { UserDocument } from './../entities/user.entity';
 import { UserRepository } from './../repositories/user.repository';
 import {
   HttpException,
@@ -17,15 +17,12 @@ import {
 export class UsersService {
   constructor(
     private userRepository: UserRepository,
-    private userSerializer: UserSerializer,
     @Inject(DB_ERROR_CODES) private dbErrorCodes: typeof errorCodes
   ) {}
 
   async create(userDto: UserDto) {
     try {
-      const user = await this.userRepository.create(userDto);
-
-      return this.userSerializer.idOnly(user);
+      return this.userRepository.create(userDto);
     } catch (error) {
       if (error.code === this.dbErrorCodes.duplicatedValue) {
         throw new HttpException(
@@ -36,16 +33,24 @@ export class UsersService {
     }
   }
 
-  async findById(id: string) {
-    return this.userSerializer.oneWithRefreshToken(
-      await this.userRepository.findOneById(id)
-    );
+  async findById(id: string): Promise<UserDocument> {
+    const user = await this.userRepository.findOneById(id);
+
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    return user;
   }
 
-  async findByEmail(email: string) {
-    return this.userSerializer.one(
-      await this.userRepository.findOneByEmail(email)
-    );
+  async findByEmail(email: string): Promise<UserDocument> {
+    const user = await this.userRepository.findOneByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    return user;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {

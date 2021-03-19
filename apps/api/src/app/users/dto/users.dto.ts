@@ -12,20 +12,10 @@ export class UserDto {
 
 export class UpdateUserDto extends PartialType(UserDto) {}
 
-export class ResponseUserDto {
+export class UserResponseDto {
   @Expose({ name: '_id' })
   id: string;
 
   @Expose()
   email: string;
-
-  @Expose()
-  password: string;
-}
-
-export class ResponseUserWithRefreshTokenDto extends PartialType(
-  ResponseUserDto
-) {
-  @Expose()
-  refreshToken: string;
 }
