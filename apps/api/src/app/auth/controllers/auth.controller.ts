@@ -32,13 +32,4 @@ export class AuthController {
   refreshTokens(@Body() refreshTokensDto: RefreshTokensDto) {
     return this.authService.refreshUserTokens(refreshTokensDto.refreshToken);
   }
-
-  @UseGuards(AuthGuard)
-  @Get('protected')
-  async handler(@Headers('Authorization') authHeader: string) {
-    // const token = authHeader.replace('Bearer ', '');
-
-    // await this.authService.validateAccessToken(token);
-    return 'Hello';
-  }
 }

@@ -1,5 +1,10 @@
 import { AuthService } from './../services/auth.service';
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UseGuards,
+} from '@nestjs/common';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -13,3 +18,5 @@ export class AuthGuard implements CanActivate {
     return await this.authService.validateAccessToken(token);
   }
 }
+
+export const UseAuthGuard = () => UseGuards(AuthGuard);

@@ -9,18 +9,13 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { plainToClass } from 'class-transformer';
-import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-export interface Response<T> {
-  data: T;
-}
-
 @Injectable()
-export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
+export class ResponseInterceptor implements NestInterceptor {
   constructor(private reflector: Reflector) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): any {
+  intercept(context: ExecutionContext, next: CallHandler) {
     const OutputClass = this.reflector.get('ResponseDto', context.getHandler());
 
     if (!OutputClass) {
@@ -39,11 +34,11 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
   }
 }
 
-export const SetResponseForInterceptor = (ResponseDto) =>
-  SetMetadata('ResponseDto', ResponseDto);
+const SetResponseForInterceptor = (ResponseDtoClass) =>
+  SetMetadata('ResponseDto', ResponseDtoClass);
 
-export const UseResponse = (ResponseDto) =>
+export const UseResponseInterceptor = (ResponseDtoClass) =>
   applyDecorators(
-    SetResponseForInterceptor(ResponseDto),
+    SetResponseForInterceptor(ResponseDtoClass),
     UseInterceptors(ResponseInterceptor)
   );
