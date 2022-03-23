@@ -3,6 +3,7 @@ import Image from '@/components/Image'
 import { PageSEO } from '@/components/SEO'
 import { ReactNode } from 'react'
 import { AuthorFrontMatter } from 'types/AuthorFrontMatter'
+import siteMetadata from '@/data/siteMetadata'
 
 interface Props {
   children: ReactNode
@@ -10,7 +11,8 @@ interface Props {
 }
 
 export default function AuthorLayout({ children, frontMatter }: Props) {
-  const { name, avatar, occupation, company, email, twitter, linkedin, github } = frontMatter
+  const { name, avatar, occupation, company, companyLink, email, twitter, linkedin, github } =
+    frontMatter
 
   return (
     <>
@@ -32,12 +34,21 @@ export default function AuthorLayout({ children, frontMatter }: Props) {
             />
             <h3 className="pt-4 pb-2 text-2xl font-bold leading-8 tracking-tight">{name}</h3>
             <div className="text-gray-500 dark:text-gray-400">{occupation}</div>
-            <div className="text-gray-500 dark:text-gray-400">{company}</div>
+            {/*TODO: hover color*/}
+            <div className="text-gray-500 dark:text-gray-400">
+              {companyLink ? (
+                <a className="hover:text-blue-300" href={companyLink}>
+                  {company}
+                </a>
+              ) : (
+                company
+              )}
+            </div>
             <div className="flex space-x-3 pt-6">
-              <SocialIcon kind="mail" href={`mailto:${email}`} />
-              <SocialIcon kind="github" href={github} />
-              <SocialIcon kind="linkedin" href={linkedin} />
-              <SocialIcon kind="twitter" href={twitter} />
+              <SocialIcon kind="mail" href={`mailto:${email ?? siteMetadata.email}`} />
+              <SocialIcon kind="github" href={github ?? siteMetadata.github} />
+              <SocialIcon kind="linkedin" href={linkedin ?? siteMetadata.linkedin} />
+              <SocialIcon kind="twitter" href={twitter ?? siteMetadata.twitter} />
             </div>
           </div>
           <div className="prose max-w-none pt-8 pb-8 dark:prose-dark xl:col-span-2">{children}</div>
