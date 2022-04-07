@@ -4,7 +4,7 @@ import matter from 'gray-matter'
 import path from 'path'
 import readingTime from 'reading-time'
 import getAllFilesRecursively from './utils/files'
-import { PostFrontMatter } from 'types/PostFrontMatter'
+import { PostFrontMatter, PostsByYearMonth, YearMonth } from 'types/PostFrontMatter'
 import { AuthorFrontMatter } from 'types/AuthorFrontMatter'
 import { Toc } from 'types/Toc'
 // Remark packages
@@ -136,4 +136,39 @@ export async function getAllFilesFrontMatter(folder: 'blog') {
   })
 
   return allFrontMatter.sort((a, b) => dateSortDesc(a.date, b.date))
+}
+
+export async function getByMonthFilesFrontMatter(folder: 'blog') {
+  const allPosts = await getAllFilesFrontMatter(folder)
+
+  const postsByYearMonth: PostsByYearMonth = allPosts.reduce((dictionary, frontMatter) => {
+    const [year, month] = frontMatter.date.split('-')
+
+    dictionary[year] = {
+      ...dictionary[year],
+      [month]: [...(dictionary[year]?.[month] ?? []), frontMatter],
+    }
+
+    return dictionary
+  }, {})
+
+  function createYearsMonths(frontMatterByYearMonth, sortingFn = dateSortDesc) {
+    let yearMonth: YearMonth[] = []
+
+    Object.keys(frontMatterByYearMonth).forEach((year) => {
+      yearMonth.push({ year, months: Object.keys(frontMatterByYearMonth[year]) })
+    })
+
+    // sort by year
+    yearMonth = yearMonth.sort((a, b) => sortingFn(a.year, b.year))
+    // sort by month
+    yearMonth = yearMonth.map((entity) => ({ ...entity, months: entity.months.sort(sortingFn) }))
+
+    return yearMonth
+  }
+
+  return {
+    postsByYearMonth: postsByYearMonth,
+    yearsMonths: createYearsMonths(postsByYearMonth),
+  }
 }

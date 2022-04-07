@@ -12,3 +12,12 @@ export type PostFrontMatter = {
   slug: string
   fileName: string
 }
+
+export interface PostsByYearMonth {
+  [year: string]: { [month: string]: PostFrontMatter[] }
+}
+
+export interface YearMonth {
+  year: string
+  months: string[]
+}
