@@ -1,10 +1,3 @@
-/*
-[] refactor interfaces
-[] ul > li
-[x] styling
-[-] searching
-* */
-
 import Link from '@/components/Link'
 import Tag from '@/components/Tag'
 import { ComponentProps } from 'react'
