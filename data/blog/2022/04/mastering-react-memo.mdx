@@ -34,7 +34,7 @@ Despite that, `<Child/>` has the same state, same props, React out of box is not
 
 ## Using React.memo
 
-`React.memo` is here to rescue. The signature is pretty straightforward:
+`memo` is here to rescue. The signature is pretty straightforward:
 
 ```tsx
 function memo<P extends object>(
@@ -93,7 +93,7 @@ memoGetSmth('foo')
 // getSmth() was called only 2 times :fire
 ```
 
-## How React Memoizes is different from traditional and why the real name should be - `renderIfPropsHaveChanged` =)
+## How React Memoizes is different from canonical
 
 Difference from traditional memoization is that React only compares current and previous props:
 
@@ -111,7 +111,10 @@ const MemoComp = memo(Comp)
 
 // prop === 2
 <MemoComp prop={prop} /> // memoized - not render
+
 ```
+
+So in fact the name of `React.memo` should be - `renderIfPropsHaveChanged`
 
 ## When You Should Memoize
 
@@ -208,5 +211,7 @@ Available in the [example](https://codesandbox.io/s/demo-react-memo-usememo-usec
 5. Don't sweat too much about re-renders
 
 ## Save my day
+
+Inspired by great content from Jack Herrington
 
 <YouTube src="https://www.youtube.com/embed/DEPwA3mv_R8" />
