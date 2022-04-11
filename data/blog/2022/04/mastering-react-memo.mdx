@@ -1,0 +1,212 @@
+---
+title: 'Mastering React Memo'
+date: '2022-04-09'
+tags: ['JS', 'React', 'Optimization']
+draft: false
+summary: 'Memo, useMemo, useCallback when and why should you use them?'
+layout: PostSimple
+---
+
+<TOCInline toc={props.toc} />
+
+## Introduction
+
+In Reactish world there are few abstractions to work with performance optimization.
+
+At the first glimpse it's not obvious why use `memo` HOC, what the reason to use `useMemo` and the difference with `useCallback`.
+
+Let's create a simple demo to understand the issue and how it's fixed by React "helpers".
+
+## Project Setup
+
+- [Codesandbox](https://codesandbox.io/s/demo-react-memo-usememo-usecallback-ucllmy?file=/src/App.tsx)
+- Parent `<App/>` with state, and button to change the state
+- `<Child/>` with props
+
+## The Issue
+
+When whe change `<App/>` state, what's actually happening (simple overview):
+
+1. reconciliation - diff of state -> need to show new state
+2. re-rendering - show new state and **re-render** all children (👈🏻 the issue)
+
+Despite that, `<Child/>` has the same state, same props, React out of box is not smart enough to check if component is need to be re-rendered or not
+
+## Using React.memo
+
+`React.memo` is here to rescue. The signature is pretty straightforward:
+
+```tsx
+function memo<P extends object>(
+  Component: SFC<P>,
+  propsAreEqual?: (
+    prevProps: Readonly<PropsWithChildren<P>>,
+    nextProps: Readonly<PropsWithChildren<P>>
+  ) => boolean
+): NamedExoticComponent<P>
+```
+
+The usage looks like:
+
+```tsx
+import { memo } from 'react'
+
+const Comp = () => {
+  /*implementation*/
+}
+
+const MemoComp = memo(Comp)
+```
+
+And in the demo when I wrap `<Child/>` with `memo(<Child/>)` we don't see unnecessary re-renderers and the issue is fixed.
+
+But devil is in the details 🤓 Let's explore more!
+
+## Traditional Memoization
+
+> In computing, memoization or memoisation is an optimization technique used primarily to speed up computer programs by storing the results of expensive function calls and returning the cached result when the same inputs occur again.
+
+Right google. Cashing is our secret souse here. Let's store our computed value and next time get it from the cache instead of do the evaluating again.
+
+Example with with `_.memoize`
+
+```ts
+import { memo } from 'lodash.es'
+
+function getSmth(prop: string) {
+  // expensive cancellations here
+  return prop
+}
+
+getSmth('foo')
+getSmth('bar')
+getSmth('foo')
+getSmth('foo')
+// without memoization getSmth() was called 4 times
+
+const memoGetSmth = memo(getSmth) // aka decorate
+
+memoGetSmth('foo')
+memoGetSmth('bar')
+memoGetSmth('foo')
+memoGetSmth('foo')
+// getSmth() was called only 2 times :fire
+```
+
+## How React Memoizes is different from traditional and why the real name should be - `renderIfPropsHaveChanged` =)
+
+Difference from traditional memoization is that React only compares current and previous props:
+
+```ts
+import { memo } from 'react'
+
+const Comp = ({ prop }) => { /*implementation*/ }
+const MemoComp = memo(Comp)
+
+// prop === 1
+<MemoComp prop={prop} /> // render
+
+// prop === 2
+<MemoComp prop={prop} /> // render
+
+// prop === 2
+<MemoComp prop={prop} /> // memoized - not render
+```
+
+## When You Should Memoize
+
+The rule of thumb is quite simple - if your component will change frequently do the optimization.
+
+Otherwise, you may get degradation of performance by making unnecessary optimization
+
+## Should You Use React.Memo?
+
+From docs:
+
+> This method only exists as a performance optimization. Do not rely on it to “prevent” a render, as this can lead to bugs.
+
+Don't worry about react rendering. At least you should =)
+
+Let my explain by examples:
+
+```
+jQuery world
+[ Data ] -> [ jQuery updates DOM ] -> [ DOM ]
+
+1. Everbody should remeber inconsistenty with "Data" and "DOM"
+2. And DOM manipulation is an expensive task for browser
+
+Reactish
+[ Data ] -> [ Components ] -> [ VDOM ] -> [ DOM ]
+
+1. Data binding and data-flow is fixed
+2. reconcilation guards as to render what is only needed. And DOM modifications are surgical
+```
+
+## Don't Sweat Re-Renders Too Much
+
+Why can re-render our component as many times as want and not be worry about it
+
+But only if we are in this loop:
+
+```
+[ Data ] -> [ Components ] -> [ VDOM ]
+```
+
+Because the matter of fact that React is performant out of the box. And we should care about how many times our `console.log` was invoked
+
+## useMemo and examples
+
+React is doing shallow diff. Which is OK, in terms of performance and predictability.
+
+```ts
+// with every render you're creating new object (passing a new reference)
+<Comp props={{ prop: 1 }} />
+```
+
+1. You can use `React.memo` second param to compare props by your own
+2. Or you can use `React.useMemo`
+
+Both usages in the [example](https://codesandbox.io/s/demo-react-memo-usememo-usecallback-ucllmy?file=/src/App.tsx)
+
+## Some good and bad use cased with useMemo
+
+```tsx
+// Bad - performance overhead, sum is primitive value. React check it by default
+const sum = useMemo(() => a + b, [a, b])
+
+// Bad - the same reason
+const fullName = useMemo(() => `${firstName} ${lastName}`, [firstName, lastName])
+
+// Good - returning not a primitive value. Also, we don't know the values.length, and it's good to have a cache here
+const betterSum = useMemo(() => values.reduce((a, b) => a + b, []), [values])
+
+// Good - returning an array
+const modifiedArray = useMemo(() => values.map((value) => a * 10), [values])
+
+// Good - returning an object
+const person = useMemo(
+  () => ({ firstName, lastName, fullName: `${firstName} ${lastName}` }),
+  [firstName, lastName]
+)
+```
+
+## useCallback
+
+Think it as `useMemo` but for functions. Not more not less.
+
+It only makes sense to use when you're going pass it ass props.
+
+Available in the [example](https://codesandbox.io/s/demo-react-memo-usememo-usecallback-ucllmy?file=/src/App.tsx)
+
+## Summary
+
+1. `memo` is not a traditional memoization technique
+2. Thinks of `memo` as `renderIfPropsHaveChanged`
+3. 'useMemo' does only matter for [referential integrity](https://en.wikipedia.org/wiki/Referential_integrity)
+4. `useMemo` only for expensive computation
+5. Don't sweat too much about re-renders
+
+## Save my day
+
+<YouTube src="https://www.youtube.com/embed/DEPwA3mv_R8" />
